@@ -13,7 +13,7 @@ def reqenv(k):
  if not v: raise RuntimeError("Missing Actions secret: "+k)
  return v
 def esc(x):return html.escape(str(x or ""),quote=True)
-def slug(x):return re.sub(r"[^a-z0-9]+","-",x.lower()).strip("-")[:65]
+def slugify(x):return re.sub(r"[^a-z0-9]+","-",x.lower()).strip("-")[:65]
 def article(site,topic,old):
  model=os.getenv("GEMINI_MODEL","gemini-2.5-flash")
  prompt=f"""Write an original evergreen 650-850 word article for {site['name']}. Topic: {topic}.
@@ -76,8 +76,11 @@ def publish_site(gh,site,a,slug,date,img):
  idx=f'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Blog | {esc(site["name"])}</title></head><body style="font:17px/1.7 system-ui;max-width:850px;margin:40px auto;padding:20px"><h1>{esc(site["name"])} Guides</h1>{cards}</body></html>'
  gh.put(repo,"blog/index.html",idx,"Update blog index")
  sm,_=gh.get(repo,"sitemap.xml")
- if sm and f"{site['base']}/{path}" not in sm:
-  sm=sm.replace("</urlset>",f"<url><loc>{site['base']}/{path}</loc><lastmod>{date}</lastmod></url></urlset>");gh.put(repo,"sitemap.xml",sm,"Update sitemap")
+ if sm:
+  for sitemap_url in (f"{site['base']}/blog/",f"{site['base']}/{path}"):
+   if sitemap_url not in sm:
+    sm=sm.replace("</urlset>",f"<url><loc>{sitemap_url}</loc><lastmod>{date}</lastmod></url></urlset>")
+  gh.put(repo,"sitemap.xml",sm,"Update sitemap")
  return f"{site['base']}/{path}",f"https://raw.githubusercontent.com/{repo}/main/{imgpath}"
 class Pinterest:
  def __init__(self):
@@ -101,7 +104,7 @@ def main():
  slotkey=f"{date}:{slot}:{key}"
  if slotkey in state.get("published_slots",[]):print("Already published for this slot.");return
  topic=site["topics"][(len(state.get("titles",[]))//2)%len(site["topics"])]
- a=article(site,topic,state.get("titles",[]));suffix=hashlib.sha1((date+key+a["title"]).encode()).hexdigest()[:5];slug=f"{date}-{slug(a['title'])}-{suffix}";img=graphic(site,a)
+ a=article(site,topic,state.get("titles",[]));suffix=hashlib.sha1((date+key+a["title"]).encode()).hexdigest()[:5];slug=f"{date}-{slugify(a['title'])}-{suffix}";img=graphic(site,a)
  if args.dry_run:print("DRY RUN: "+json.dumps({"site":site["name"],"topic":topic,"title":a["title"],"slug":slug},indent=2));return
  gh=GH();url,image_url=publish_site(gh,site,a,slug,date,img);pt=Pinterest();board=pt.board(site["board"]);result=pt.create(board,a,url,image_url)
  state.setdefault("titles",[]).append(a["title"]);state["titles"]=state["titles"][-200:]
