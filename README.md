@@ -24,7 +24,8 @@ Existing homepages and current tools/templates are not overwritten.
 In Settings > Secrets and variables > Actions, add:
 - GEMINI_API_KEY — Google AI Studio API key.
 - GITHUB_CONTENT_TOKEN — fine-grained GitHub token with Contents Read and write access to Smart-Tools-Hub and TemplivoX.
-- PINTEREST_ACCESS_TOKEN — Pinterest OAuth access token with boards:read, boards:write and pins:write scopes.\n- Optional for automatic token refresh: PINTEREST_APP_ID, PINTEREST_APP_SECRET and PINTEREST_REFRESH_TOKEN. If all three are set, the workflow refreshes the access token before each run.
+- PINTEREST_ACCESS_TOKEN — Pinterest OAuth access token with boards:read, boards:write and pins:write scopes.
+- Optional for automatic token refresh: PINTEREST_APP_ID, PINTEREST_APP_SECRET and PINTEREST_REFRESH_TOKEN. If all three are set, the workflow refreshes the access token before each run.
 
 Never place tokens in source code or commits.
 
