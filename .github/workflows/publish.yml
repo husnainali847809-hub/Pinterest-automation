@@ -1,0 +1,63 @@
+name: Pinterest Article Publisher
+on:
+  schedule:
+    - cron: "0 3 * * *"
+    - cron: "0 7 * * *"
+    - cron: "0 11 * * *"
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+    inputs:
+      site:
+        description: Choose a website
+        required: true
+        type: choice
+        options: [smarttools, templivox]
+      dry_run:
+        description: Preview only, do not publish
+        required: true
+        default: true
+        type: boolean
+permissions:
+  contents: write
+concurrency:
+  group: pinterest-article-publisher
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Generate article and publish Pin
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-2.5-flash
+          GITHUB_CONTENT_TOKEN: ${{ secrets.GITHUB_CONTENT_TOKEN }}
+          PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
+          SCHEDULE_CRON: ${{ github.event.schedule }}
+          MANUAL_SITE: ${{ inputs.site }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              python publisher.py --site "$MANUAL_SITE" --dry-run
+            else
+              python publisher.py --site "$MANUAL_SITE"
+            fi
+          else
+            python publisher.py --cron "$SCHEDULE_CRON"
+          fi
+      - name: Commit duplicate protection state
+        if: success()
+        run: |
+          if ! git diff --quiet -- seen.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add seen.json
+            git commit -m "Update Pinterest publishing history"
+            git push
+          fi
