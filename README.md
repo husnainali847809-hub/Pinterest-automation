@@ -24,7 +24,7 @@ Existing homepages and current tools/templates are not overwritten.
 In Settings > Secrets and variables > Actions, add:
 - GEMINI_API_KEY — Google AI Studio API key.
 - GITHUB_CONTENT_TOKEN — fine-grained GitHub token with Contents Read and write access to Smart-Tools-Hub and TemplivoX.
-- PINTEREST_ACCESS_TOKEN — Pinterest OAuth token with boards:read, boards:write and pins:write scopes.
+- PINTEREST_ACCESS_TOKEN — Pinterest OAuth access token with boards:read, boards:write and pins:write scopes.\n- Optional for automatic token refresh: PINTEREST_APP_ID, PINTEREST_APP_SECRET and PINTEREST_REFRESH_TOKEN. If all three are set, the workflow refreshes the access token before each run.
 
 Never place tokens in source code or commits.
 
@@ -33,7 +33,7 @@ Register/connect a Pinterest developer app and authorize your account with board
 - Smart Tools Hub | Tips & Tutorials
 - TemplivoX | Printable Planners & Templates
 
-Pinterest Trial access can create Pins visible only to the app owner. Public distribution requires appropriate Standard access approval. Pinterest access tokens expire; renew the token and update the repository secret when required.
+Pinterest Trial access can create Pins visible only to the app owner. Public distribution requires appropriate Standard access approval. Pinterest access tokens expire. Configure the three optional refresh secrets for automatic refresh. If Pinterest rotates your refresh token, update PINTEREST_REFRESH_TOKEN as the workflow log instructs. Otherwise, renew the access token manually when needed.
 
 ## Test
 Open Actions > Pinterest Article Publisher > Run workflow. Choose a website and keep dry_run enabled for a preview. After reviewing the log, run again with dry_run disabled to publish one test article and Pin.
