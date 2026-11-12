@@ -84,7 +84,17 @@ def publish_site(gh,site,a,slug,date,img):
  return f"{site['base']}/{path}",f"https://raw.githubusercontent.com/{repo}/main/{imgpath}"
 class Pinterest:
  def __init__(self):
-  self.s=requests.Session();self.s.headers.update({"Authorization":"Bearer "+reqenv("PINTEREST_ACCESS_TOKEN"),"Content-Type":"application/json"})
+  token=os.getenv("PINTEREST_ACCESS_TOKEN","").strip()
+  app_id=os.getenv("PINTEREST_APP_ID","").strip()
+  app_secret=os.getenv("PINTEREST_APP_SECRET","").strip()
+  refresh=os.getenv("PINTEREST_REFRESH_TOKEN","").strip()
+  if app_id and app_secret and refresh:
+   rr=requests.post(PAPI+"/oauth/token",auth=(app_id,app_secret),data={"grant_type":"refresh_token","refresh_token":refresh},timeout=45)
+   rr.raise_for_status(); token=rr.json()["access_token"]
+   if rr.json().get("refresh_token") and rr.json()["refresh_token"]!=refresh:
+    print("WARNING: Pinterest rotated the refresh token; update PINTEREST_REFRESH_TOKEN in repository secrets.")
+  if not token: raise RuntimeError("Set PINTEREST_ACCESS_TOKEN or all three Pinterest refresh-token secrets.")
+  self.s=requests.Session();self.s.headers.update({"Authorization":"Bearer "+token,"Content-Type":"application/json"})
  def board(self,name):
   r=self.s.get(PAPI+"/boards",params={"page_size":100},timeout=45);r.raise_for_status()
   for x in r.json().get("items",[]):
